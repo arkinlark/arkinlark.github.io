@@ -1,44 +1,51 @@
 const express = require('express');
-const http = require('http');
+const server = require('http').createServer();
 const app = express();
+const PORT = 3000;
 
-const server = http.createServer()
+app.get('/', function (req, res) {
+    res.sendFile('index.html', { root: __dirname });
+});
 
-app.get('/', (req, res) => {
-    res.sendFile('index.html', { root: __dirname })
-})
+server.on('request', app);
 
-server.on('request', app)
-server.listen(3000, () => {
-    console.log('server started')
-})
+server.listen(PORT, function () { console.log('Listening on ' + PORT); });
 
-/** Begin Websocket */
+/** Websocket **/
+const WebSocketServer = require('ws').Server;
 
-const WebsocketServer = require('ws').Server;
-
-
-const wss = new WebsocketServer({ server });
+const wss = new WebSocketServer({ server: server });
 
 wss.on('connection', function connection(ws) {
     const numClients = wss.clients.size;
-    console.log('Connected clients:', numClients);
 
+    console.log('clients connected: ', numClients);
 
-    wss.broadcast(`Current clients: ${numClients}`);
+    wss.broadcast(`Current visitors: ${numClients}`);
 
-    ws.readyState === ws.OPEN && ws.send('Welcome to the chat room!');
-
+    if (ws.readyState === ws.OPEN) {
+        ws.send('welcome!');
+    }
 
     ws.on('close', function close() {
-        console.log(`Client disconnected. ${numClients} clients remaining`);
-        console.log('A Client has disconnected');
-    })
+        wss.broadcast(`Current visitors: ${wss.clients.size}`);
+        console.log('A client has disconnected');
+    });
 
-})
+    ws.on('error', function error() {
+        //
+    });
+});
 
+/**
+ * Broadcast data to all connected clients
+ * @param  {Object} data
+ * @void
+ */
 wss.broadcast = function broadcast(data) {
+    console.log('Broadcasting: ', data);
     wss.clients.forEach(function each(client) {
         client.send(data);
-    })
-}
+    });
+};
+/** End Websocket **/

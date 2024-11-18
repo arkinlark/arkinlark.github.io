@@ -10,6 +10,7 @@
   </body>
   <script>
     let ws;
+
     try {
       // Choose correct websocket proto
       const proto = window.location.protocol === "https:" ? "wss" : "ws";
@@ -17,6 +18,12 @@
     } catch (e) {
       //
     }
+
+    const proto = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${proto}://${window.location.host}`;
+
+    ws = new WebSocket(wsUrl);
+
     ws.onmessage = (event) => {
       console.log(event.data);
     };
